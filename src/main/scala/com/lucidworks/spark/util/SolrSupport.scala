@@ -2,7 +2,7 @@ package com.lucidworks.spark.util
 
 import java.beans.{IntrospectionException, Introspector, PropertyDescriptor}
 import java.lang.reflect.Modifier
-import java.net.{ConnectException, InetAddress, SocketException, URL}
+import java.net.{ConnectException, InetAddress, SocketException, SocketTimeoutException, URL}
 import java.nio.file.{Files, Paths}
 import java.util.Date
 import java.util.concurrent.TimeUnit
@@ -379,39 +379,61 @@ object SolrSupport extends LazyLogging {
 
     req.add(asJavaCollection(batch))
 
-    try {
-      solrClient.request(req)
-      val timeTaken = (System.currentTimeMillis() - initialTime)/1000.0
-      logger.info("Took '" + timeTaken + "' secs to index '" + batch.size + "' documents")
-    } catch {
-      case e: Exception =>
-        if (shouldRetry(e)) {
-          logger.error("Send batch to collection " + collection + " failed due to " + e + " ; will retry ...")
+    val retryCount=200
+
+    breakable(
+    for(attempt <- 1 to retryCount){
+      try {
+        solrClient.request(req)
+        val timeTaken = (System.currentTimeMillis() - initialTime)/1000.0
+        logger.info("Took '" + timeTaken + "' secs to index '" + batch.size + "' documents")
+        break
+      } catch {
+        case e: Exception => logger.error("Got error in attempt "+attempt+" , error:"+e.getCause)
+          e.printStackTrace()
           try {
             Thread.sleep(2000)
           } catch {
             case ie: InterruptedException => Thread.interrupted()
           }
-
-          try {
-            solrClient.request(req)
-          } catch {
-            case ex: Exception =>
-              logger.error("Send batch to collection " + collection + " failed due to: " + e, e)
-              ex match {
-                case re: RuntimeException => throw re
-                case e: Exception => throw new RuntimeException(e)
-              }
-          }
-        } else {
-          logger.error("Send batch to collection " + collection + " failed due to: " + e, e)
-          e match {
-            case re: RuntimeException => throw re
-            case ex: Exception => throw new RuntimeException(ex)
-          }
-        }
-
+          if(attempt==retryCount)
+            throw e
+      }
     }
+    )
+//    try {
+//      solrClient.request(req)
+//      val timeTaken = (System.currentTimeMillis() - initialTime)/1000.0
+//      logger.info("Took '" + timeTaken + "' secs to index '" + batch.size + "' documents")
+//    } catch {
+//      case e: Exception =>
+//        if (shouldRetry(e)) {
+//          logger.error("Send batch to collection " + collection + " failed due to " + e + " ; will retry ...")
+//          try {
+//            Thread.sleep(2000)
+//          } catch {
+//            case ie: InterruptedException => Thread.interrupted()
+//          }
+//
+//          try {
+//            solrClient.request(req)
+//          } catch {
+//            case ex: Exception =>
+//              logger.error("Send batch to collection " + collection + " failed due to: " + e, e)
+//              ex match {
+//                case re: RuntimeException => throw re
+//                case e: Exception => throw new RuntimeException(e)
+//              }
+//          }
+//        } else {
+//          logger.error("Send batch to collection " + collection + " failed due to: " + e, e)
+//          e match {
+//            case re: RuntimeException => throw re
+//            case ex: Exception => throw new RuntimeException(ex)
+//          }
+//        }
+//
+//    }
 
   }
 
@@ -421,6 +443,8 @@ object SolrSupport extends LazyLogging {
       case e: ConnectException => true
       case e: NoHttpResponseException => true
       case e: SocketException => true
+      case e: SocketTimeoutException => true
+      case e: java.util.concurrent.TimeoutException => true
       case _ => false
     }
   }

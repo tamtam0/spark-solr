@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.lucidworks.spark</groupId>
   <artifactId>spark-solr</artifactId>
-  <version>3.6.6-SNAPSHOT</version>
+  <version>3.6.4-CDH</version>
   <packaging>jar</packaging>
   <name>spark-solr</name>
   <description>Tools for reading data from Spark into Solr</description>
@@ -37,11 +37,10 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.8</java.version>
-    <spark.version>2.4.3</spark.version>
-    <solr.version>8.1.1</solr.version>
-    <hadoop.version>2.7.5</hadoop.version>
-    <fasterxml.version>2.9.9</fasterxml.version>
-    <scala.version>2.11.12</scala.version>
+    <spark.version>2.4.0-cdh6.2.0</spark.version>
+    <solr.version>7.4.0-cdh6.2.0</solr.version>
+    <fasterxml.version>2.4.0</fasterxml.version>
+    <scala.version>2.11.8</scala.version>
     <scala.binary.version>2.11</scala.binary.version>
     <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
     <fasterxml.version>2.4.0</fasterxml.version>
@@ -55,6 +54,10 @@
       <releases>
         <enabled>true</enabled>
       </releases>
+    </repository>
+    <repository>
+      <id>cloudera</id>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
     </repository>
   </repositories>
   <profiles>
@@ -105,8 +108,8 @@
             <version>0.7.5.201505241946</version>
             <configuration>
               <excludes>
-              <exclude>com/lucidworks/spark/example/**</exclude>
-              <exclude>**/*Test*</exclude>
+                <exclude>com/lucidworks/spark/example/**</exclude>
+                <exclude>**/*Test*</exclude>
               </excludes>
             </configuration>
             <executions>
@@ -280,7 +283,7 @@
                   <exclude>org.eclipse.jetty.orbit:*</exclude>
                   <exclude>org.slf4j:*</exclude>
                   <exclude>org.scala-lang:scala-library</exclude>
-                  <exclude>commons-httpclient:commons-httpclient</exclude>
+                  <!--                  <exclude>commons-httpclient:commons-httpclient</exclude>-->
                   <exclude>org.apache.curator:*</exclude>
                   <exclude>org.apache.commons:commons-lang3</exclude>
                   <exclude>com.google.code.findbugs</exclude>
@@ -343,8 +346,8 @@
                 </relocation>
                 <!-- Commented out because the maven-shade-plugin does not work for Scala classes due to ScalaSig-->
                 <!--<relocation>-->
-                  <!--<pattern>org.apache.solr</pattern>-->
-                  <!--<shadedPattern>shaded.apache.solr</shadedPattern>-->
+                <!--<pattern>org.apache.solr</pattern>-->
+                <!--<shadedPattern>shaded.apache.solr</shadedPattern>-->
                 <!--</relocation>-->
                 <relocation>
                   <pattern>org.apache.commons.cli</pattern>
@@ -353,7 +356,7 @@
                 <relocation>
                   <pattern>org.apache.http</pattern>
                   <shadedPattern>shaded.apache.http</shadedPattern>
-		</relocation>
+                </relocation>
               </relocations>
             </configuration>
           </execution>
@@ -434,9 +437,9 @@
       <version>${spark.version}</version>
     </dependency>
     <dependency>
-        <groupId>org.apache.bahir</groupId>
-        <artifactId>spark-streaming-twitter_${scala.binary.version}</artifactId>
-        <version>2.0.1</version>
+      <groupId>org.apache.bahir</groupId>
+      <artifactId>spark-streaming-twitter_${scala.binary.version}</artifactId>
+      <version>2.0.1</version>
     </dependency>
     <dependency>
       <groupId>commons-cli</groupId>
@@ -473,18 +476,6 @@
           <groupId>org.antlr</groupId>
           <artifactId>antlr4-runtime</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-annotations</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-auth</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-hdfs-client</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -506,24 +497,12 @@
           <groupId>org.antlr</groupId>
           <artifactId>antlr4-runtime</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-annotations</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-auth</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-hdfs-client</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
-      <version>${hadoop.version}</version>
+      <version>2.6.0</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -543,7 +522,7 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
-      <version>${hadoop.version}</version>
+      <version>2.6.0</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -572,7 +551,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.12</version>
+      <version>4.11</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -623,7 +602,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
-      <version>1.18</version>
+      <version>1.4.1</version>
     </dependency>
     <dependency> <!-- optional dependency of joda-time that is mandatory in Scala -->
       <groupId>org.joda</groupId>
